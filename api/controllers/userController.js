@@ -100,9 +100,23 @@ module.exports.userSignup = async (req, res) => {
 };
 
 module.exports.verifyEmailToken = async (req, res) => {
-  User.sync({ alter: true });
+  // User.sync({ alter: true });
+
+  // try {
+  //   const decodedToken = jwt.verify(req.params.token, config.jwtSecret);
+  // } catch (err) {
+  //   console.log(err);
+  // }
+  let id;
   try {
-    const { id } = jwt.verify(req.params.token, config.jwtSecret);
+    jwt.verify(req.params.token, config.jwtSecret, (err, data) => {
+      if (err) {
+        throw helpers.generateError('Token is Invalid', 'token');
+      } else {
+        id = data.id;
+      }
+    });
+    // console.log(data);
     console.log(id);
     const { emailIsVerified } = await User.findByPk(id);
     console.log(emailIsVerified);
@@ -125,7 +139,7 @@ module.exports.verifyEmailToken = async (req, res) => {
   } catch (err) {
     let errors = helpers.handleErrors(err);
     res.status(401).json(errors);
-    // console.log(err);
+    console.log(err);
   }
 };
 
@@ -180,7 +194,7 @@ module.exports.userLogin = async (req, res) => {
   } catch (err) {
     let errors = helpers.handleErrors(err);
     console.log(err);
-    res.status(400).json(errors);
+    res.status(401).json(errors);
   }
 };
 

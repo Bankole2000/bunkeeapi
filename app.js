@@ -30,7 +30,7 @@ app.use((req, res, next) => {
 // Test db connection
 db.authenticate()
   .then(() => {
-    db.sync({ force: true });
+    // db.sync({ force: true });
     console.log('Database Connected...');
     console.log(db.models);
     app.listen(config.port, () => {

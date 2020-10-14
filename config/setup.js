@@ -56,6 +56,7 @@ helpers.handleErrors = (err) => {
 
   if (err.errors != undefined) {
     errorsObject.hasErrors = true;
+
     if (err.errors.length > 0) {
       err.errors.forEach((error) => {
         let fieldName = helpers.capitalizeFLetters(error.path);

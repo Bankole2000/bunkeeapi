@@ -11,7 +11,7 @@ HostReview.init(
       type: DataTypes.UUID,
       defaultValue: Sequelize.UUIDV4,
     },
-    hostReviewerId: {
+    hostId: {
       type: DataTypes.INTEGER,
     },
     rating: {
@@ -19,6 +19,9 @@ HostReview.init(
     },
     reviewText: {
       type: DataTypes.TEXT,
+    },
+    guestId: {
+      type: DataTypes.INTEGER,
     },
   },
   {
