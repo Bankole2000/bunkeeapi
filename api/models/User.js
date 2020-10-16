@@ -223,9 +223,11 @@ User.init(
     },
     phoneIsVerified: {
       type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
     identityIsVerified: {
       type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
     aboutMe: {
       type: DataTypes.STRING,

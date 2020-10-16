@@ -5,13 +5,17 @@ const { config, helpers } = require('../../config/setup');
 const { emailMaker } = require('../../config/emailMaker');
 const validator = require('../../config/validator');
 
-module.exports.getAllUsers = (req, res) => {
-  res.status(200).json({ message: 'Get users is working ' });
+module.exports.getAllUsers = async (req, res) => {
+  const users = await User.findAll({
+    attributes: ['username', 'lastname', 'firstname', 'email', 'uuid'],
+  });
+  res.status(200).json({ message: 'Get all users', users });
 };
 
-module.exports.getSingleUserById = (req, res) => {
+module.exports.getSingleUserById = async (req, res) => {
   const userId = req.params.userId;
-  res.status(200).json({ message: `Details of user with id ${userId}` });
+  const user = await User.findByPk(userId);
+  res.status(200).json({ message: `Details of user with id ${userId}`, user });
 };
 
 module.exports.userSignup = async (req, res) => {
@@ -198,8 +202,28 @@ module.exports.userLogin = async (req, res) => {
   }
 };
 
-module.exports.updateUser = (req, res) => {
-  const userId = req.params.userId;
+module.exports.updateUser = async (req, res) => {
+  const id = req.params.userId;
+  const updateData = {};
+  for (const data of req.body) {
+    updateData[data.name] = data.value;
+  }
+  try {
+    const result = await User.update(updateData, {
+      where: { id },
+    });
+    if (result[0]) {
+      const updatedUser = await User.findByPk(id);
+      res
+        .status(200)
+        .json({ message: `updated User with id ${id}`, updatedUser });
+    } else {
+      res.status(404).json({ message: `Unable to update User` });
+    }
+  } catch (err) {
+    let errors = helpers.handleErrors(err);
+    res.status(400).json(errors);
+  }
   res.status(200).json({ message: `Updated user with id ${userId}` });
 };
 
