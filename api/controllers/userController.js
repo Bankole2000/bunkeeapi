@@ -1,4 +1,13 @@
 const User = require('../models/User');
+const Listing = require('../models/Listing');
+const Offer = require('../models/Offer');
+const ListingImage = require('../models/ListingImage');
+const HostReview = require('../models/HostReview');
+const GuestReview = require('../models/GuestReview');
+const Booking = require('../models/Booking');
+const Agent = require('../models/Agent');
+const Rental = require('../models/Rental');
+
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const { config, helpers } = require('../../config/setup');
@@ -8,6 +17,23 @@ const validator = require('../../config/validator');
 module.exports.getAllUsers = async (req, res) => {
   const users = await User.findAll({
     attributes: ['username', 'lastname', 'firstname', 'email', 'uuid'],
+    include: [
+      Agent,
+      {
+        model: Listing,
+        include: {
+          model: ListingImage,
+        },
+        order: [[ListingImage, 'listingOrder', 'ASC']],
+      },
+      Offer,
+      { model: HostReview, isAliased: 'host' },
+      { model: GuestReview, isAliased: 'guest' },
+    ],
+    order: [
+      [Listing, 'createdAt', 'DESC'],
+      [Offer, 'createdAt', 'DESC'],
+    ],
   });
   res.status(200).json({ message: 'Get all users', users });
 };
@@ -26,6 +52,7 @@ module.exports.userSignup = async (req, res) => {
     firstname,
     lastname,
     gender,
+    profileImageUrl,
     dob,
     tos,
   } = req.body;
@@ -40,6 +67,7 @@ module.exports.userSignup = async (req, res) => {
         firstname,
         lastname,
         gender,
+        profileImageUrl,
         dob,
         tos,
       });
@@ -50,7 +78,7 @@ module.exports.userSignup = async (req, res) => {
         uuid: user.uuid,
         isAgent: user.isAgent,
       });
-      const verficationUrl = `${config.baseUrl}/users/verify/${userToken}`;
+      // const verficationUrl = `${config.appUrl}/users/verify/${userToken}`;
       const result = await User.update(
         { emailVerificationToken: userToken },
         {
@@ -61,24 +89,25 @@ module.exports.userSignup = async (req, res) => {
       if (result[0]) {
         //#region
         // Make email here
-        const emailText = emailMaker.makeSignupEmailTextOnly(
-          user,
-          verficationUrl
-        );
-        const emailBody = emailMaker.makeSignupEmailBody(user, verficationUrl);
-        const emailToSend = emailMaker.makeEmailParams(
-          '🏠 Bunkee API',
-          user.email,
-          `👋 Hi ${user.firstname}, Please Verify your email`,
-          emailText,
-          emailBody
-        );
-        let transporter = nodemailer.createTransport(emailMaker.transport);
-        // send mail with defined transport object
-        let info = await transporter.sendMail(emailToSend);
-        console.log('Message sent: %s', info.messageId);
+        // const emailText = emailMaker.makeSignupEmailTextOnly(
+        //   user,
+        //   verficationUrl
+        // );
+        // const emailBody = emailMaker.makeSignupEmailBody(user, verficationUrl);
+        // const emailToSend = emailMaker.makeEmailParams(
+        //   '🏠 Bunkee API',
+        //   user.email,
+        //   `👋 Hi ${user.firstname}, Please Verify your email`,
+        //   emailText,
+        //   emailBody
+        // );
+        // let transporter = nodemailer.createTransport(emailMaker.transport);
+        // // send mail with defined transport object
+        // let info = await transporter.sendMail(emailToSend);
+        // console.log('Message sent: %s', info.messageId);
         //#endregion - Email ends here
         res.status(201).json({
+          success: true,
           message: `Signed up user on this route`,
           user: {
             id: user.id,
@@ -199,6 +228,52 @@ module.exports.userLogin = async (req, res) => {
     let errors = helpers.handleErrors(err);
     console.log(err);
     res.status(401).json(errors);
+  }
+};
+
+module.exports.checkEmailIsTaken = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const taken = await User.findOne({ where: { email } });
+    if (taken) {
+      res.status(200).json({
+        taken: true,
+        message: `${email} is already taken`,
+        takenBy: taken,
+      });
+    } else {
+      res.status(404).json({
+        taken: false,
+        message: `${email} is available`,
+        takenBy: taken,
+      });
+    }
+  } catch (err) {
+    let errors = helpers.handleErrors(err);
+    res.status(400).json(errors);
+  }
+};
+
+module.exports.checkUsernameIsTaken = async (req, res) => {
+  const { username } = req.body;
+  try {
+    const taken = await User.findOne({ where: { username } });
+    if (taken) {
+      res.status(200).json({
+        taken: true,
+        message: `${username} is already taken`,
+        takenBy: taken,
+      });
+    } else {
+      res.status(404).json({
+        taken: false,
+        message: `${username} is available`,
+        takenBy: taken,
+      });
+    }
+  } catch (err) {
+    let errors = helpers.handleErrors(err);
+    res.status(400).json(errors);
   }
 };
 

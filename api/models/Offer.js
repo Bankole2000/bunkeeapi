@@ -13,6 +13,15 @@ Offer.init(
     posterId: {
       type: DataTypes.INTEGER,
     },
+    description: {
+      type: DataTypes.STRING,
+    },
+    budget: {
+      type: DataTypes.INTEGER,
+    },
+    title: {
+      type: DataTypes.STRING,
+    },
   },
   {
     sequelize: db,

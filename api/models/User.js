@@ -257,6 +257,21 @@ User.hasMany(Listing, {
 User.hasMany(Offer, {
   foreignKey: 'posterId',
 });
+User.hasMany(HostReview, {
+  foreignKey: 'hostId',
+});
+
+User.hasMany(HostReview, {
+  foreignKey: 'guestId',
+});
+
+User.hasMany(GuestReview, {
+  foreignKey: 'hostId',
+});
+
+User.hasMany(GuestReview, {
+  foreignKey: 'guestId',
+});
 
 User.hasOne(Agent);
 

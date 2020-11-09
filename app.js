@@ -1,17 +1,16 @@
 const express = require('express');
 const morgan = require('morgan');
+// const multer = require('multer');
+// const upload = multer({ dest: 'uploads/' });
 const bodyParser = require('body-parser');
-const multer = require('multer');
 const { config } = require('./config/setup');
 const db = require('./config/database.js');
-
-const upload = multer();
 const app = express();
 
 app.use(morgan('dev'));
+app.use('/uploads', express.static('uploads'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(upload.array());
 
 // CORS stuff
 app.use((req, res, next) => {
@@ -52,6 +51,10 @@ app.use('/bookings', bookingRoutes);
 app.use('/listings', listingRoutes);
 app.use('/offers', offerRoutes);
 app.use('/rentals', rentalRoutes);
+// app.post('/listingImage', upload.single('listingImage'), (req, res, next) => {
+//   console.log(req.file);
+//   res.status(200).json({ message: 'uploaded file' });
+// });
 
 app.use((req, res, next) => {
   res.status(404).json({

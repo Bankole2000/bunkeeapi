@@ -1,0 +1,129 @@
+Foregn key relations
+
+// Foo.barId will be used to retrieve Bar with Bar.id == Foo.barId
+Foo.belongsTo(Bar, {
+  onDelete: 'NO ACTION',
+  onUpdate: 'NO ACTION',
+  foreignKey: 'barId',
+});
+
+The A.hasOne(B) association means that a One-To-One relationship exists between A and B, with the foreign key being defined in the target model (B).
+
+The A.belongsTo(B) association means that a One-To-One relationship exists between A and B, with the foreign key being defined in the source model (A).
+
+The A.hasMany(B) association means that a One-To-Many relationship exists between A and B, with the foreign key being defined in the target model (B).
+
+The A.belongsToMany(B, { through: 'C' }) association means that a Many-To-Many relationship exists between A and B, using table C as junction table, which will have the foreign keys (aId and bId, for example). Sequelize will automatically create this model C (unless it already exists) and define the appropriate foreign keys on it.
+
+
+
+Eager loading with Many-to-Many relationships
+
+When you perform eager loading on a model with a Belongs-to-Many relationship, Sequelize will fetch the junction table data as well, by default. For example:
+
+const Foo = sequelize.define('Foo', { name: DataTypes.TEXT });
+const Bar = sequelize.define('Bar', { name: DataTypes.TEXT });
+Foo.belongsToMany(Bar, { through: 'Foo_Bar' });
+Bar.belongsToMany(Foo, { through: 'Foo_Bar' });
+
+await sequelize.sync();
+const foo = await Foo.create({ name: 'foo' });
+const bar = await Bar.create({ name: 'bar' });
+await foo.addBar(bar);
+const fetchedFoo = Foo.findOne({ include: Bar });
+console.log(JSON.stringify(fetchedFoo, null, 2));
+
+Output:
+
+{
+  "id": 1,
+  "name": "foo",
+  "Bars": [
+    {
+      "id": 1,
+      "name": "bar",
+      "Foo_Bar": {
+        "FooId": 1,
+        "BarId": 1
+      }
+    }
+  ]
+}
+
+Note that every bar instance eager loaded into the "Bars" property has an extra property called Foo_Bar which is the relevant Sequelize instance of the junction model. By default, Sequelize fetches all attributes from the junction table in order to build this extra property.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Terms of Use : 
+
+Responsible party: COKIDOO STUDIOS S.L.U. (Erasmusu.com).
+
+Purposes: (i) the management and or provision of the services contracted by the Users, (ii) the invoicing arising from these: (iii) the publication of adverts in any of their forms, present or future; and, (iv) the delivery of commercial information, including by electronic means, including electronic mail or phone, on the products and services provided by the Company.
+
+Entitlement: consent of the interested party.
+
+Beneficiaries: tenants or lessors as the case may be. Suppliers, where necessary for the provision of services, both nationally and internationally and in case they are located outside the territory of the Common European area, they will be beneficiaries only if they belong to countries with appropriate levels of protection according to the European authorities.
+
+Rights: to object to and to delete their data and other rights explained in the Privacy and Cookies Policy.\
+
+
+
+
+What brought you to Bunkie 
+
+I'm a student
+I want to publish accommodation or job ads
+I want to attract students to my business
+I represent a university or association
+I'm a traveller or something else not listed above

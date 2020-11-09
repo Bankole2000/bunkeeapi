@@ -11,7 +11,9 @@ const requireUserAuth = (req, res, next) => {
           if (err) {
             throw helpers.generateError('Token is Invalid', 'token');
           } else {
-            console.log(user);
+            req.userId = user.id;
+
+            console.log(user, req.userId);
             next();
           }
         });

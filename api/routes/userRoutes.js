@@ -10,6 +10,8 @@ const {
 } = require('../middleware/authMiddleware');
 
 router.get('/', userController.getAllUsers);
+router.post('/checkemail', userController.checkEmailIsTaken);
+router.post('/checkusername', userController.checkUsernameIsTaken);
 router.post('/signup', userController.userSignup);
 router.post('/login', userController.userLogin);
 router.get('/verify/:token', userController.verifyEmailToken);

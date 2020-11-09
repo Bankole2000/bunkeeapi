@@ -15,18 +15,36 @@ Listing.init(
     ownerId: {
       type: DataTypes.INTEGER,
     },
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
     isPrivate: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
     pricePerNight: {
       type: DataTypes.INTEGER,
+      defaultValue: 0,
     },
     locationState: {
       type: DataTypes.STRING,
     },
     guestCapacity: {
       type: DataTypes.INTEGER,
+      defaultValue: 1,
+    },
+    typeOfListing: {
+      // Entire place, private room or shared room
+      type: DataTypes.STRING,
+    },
+    isPublished: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
   },
   {

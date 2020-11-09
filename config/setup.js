@@ -1,7 +1,8 @@
 const isLocal = true;
 
 const remote = {
-  url: '',
+  apiUrl: '',
+  appUrl: '',
   db: '',
   user: 'bankevjs_nodejs',
   password: 'L7LjqsdUw7y73XM',
@@ -19,7 +20,8 @@ const config = {
   port,
   baseUrl: isLocal
     ? `http://localhost:${process.env.PORT || 5000}`
-    : remote.url,
+    : remote.apiUrl,
+  appUrl: isLocal ? '' : remote.appUrl,
   db: isLocal ? 'bunkeeapi' : remote.db,
   user: isLocal ? 'nodejs' : remote.user,
   password: isLocal ? 'nodejs' : remote.password,
