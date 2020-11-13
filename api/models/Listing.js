@@ -34,6 +34,15 @@ Listing.init(
     locationState: {
       type: DataTypes.STRING,
     },
+    locationCountry: {
+      type: DataTypes.STRING,
+    },
+    locationCity: {
+      type: DataTypes.STRING,
+    },
+    buildingType: {
+      type: DataTypes.STRING,
+    },
     guestCapacity: {
       type: DataTypes.INTEGER,
       defaultValue: 1,
@@ -41,6 +50,9 @@ Listing.init(
     typeOfListing: {
       // Entire place, private room or shared room
       type: DataTypes.STRING,
+    },
+    percentComplete: {
+      type: DataTypes.INTEGER,
     },
     isPublished: {
       type: DataTypes.BOOLEAN,

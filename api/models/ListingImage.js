@@ -9,7 +9,10 @@ ListingImage.init(
       type: DataTypes.UUID,
       defaultValue: Sequelize.UUIDV4,
     },
-    imageUrl: {
+    imageResizedUrl: {
+      type: DataTypes.STRING,
+    },
+    imageFullsizeUrl: {
       type: DataTypes.STRING,
     },
     listingId: {
@@ -17,6 +20,9 @@ ListingImage.init(
     },
     listingOrder: {
       type: DataTypes.INTEGER,
+    },
+    userGivenName: {
+      type: DataTypes.STRING,
     },
   },
   {

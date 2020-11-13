@@ -16,7 +16,16 @@ const validator = require('../../config/validator');
 
 module.exports.getAllUsers = async (req, res) => {
   const users = await User.findAll({
-    attributes: ['username', 'lastname', 'firstname', 'email', 'uuid'],
+    attributes: [
+      'id',
+      'username',
+      'lastname',
+      'firstname',
+      'email',
+      'uuid',
+      'emailVerificationToken',
+      'emailIsVerified',
+    ],
     include: [
       Agent,
       {
@@ -178,6 +187,7 @@ module.exports.verifyEmailToken = async (req, res) => {
 
 module.exports.userLogin = async (req, res) => {
   const { email, password } = req.body;
+  console.log(email, password, req.body);
   const emailOrUsername = email ? email : false;
   try {
     if (validator.isEmail(emailOrUsername)) {
