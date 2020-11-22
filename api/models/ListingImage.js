@@ -9,6 +9,12 @@ ListingImage.init(
       type: DataTypes.UUID,
       defaultValue: Sequelize.UUIDV4,
     },
+    filePath: {
+      type: DataTypes.STRING,
+    },
+    resizedFilePath: {
+      type: DataTypes.STRING,
+    },
     imageResizedUrl: {
       type: DataTypes.STRING,
     },

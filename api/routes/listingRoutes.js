@@ -48,6 +48,7 @@ const {
 const listingController = require('../controllers/listingController');
 
 router.get('/', listingController.getAllListings);
+router.get('/search', listingController.getListingsByLocationState);
 router.post('/', requireUserAuth, listingController.createAListing);
 router.post(
   '/:listingId/listingimage',
@@ -55,8 +56,15 @@ router.post(
   upload.single('listingImage'),
   listingController.uploadListingImage
 );
-router.get('/:listingId', listingController.getSingleListingDetails);
+router.post('/:listingId/like', requireUserAuth, listingController.likeListing);
+
+router.delete(
+  '/:listingId/listingimage/:index',
+  requireUserAuth,
+  listingController.deleteListingImage
+);
+router.get('/listing/:listingId', listingController.getSingleListingDetails);
 router.patch('/:listingId', listingController.updateListing);
-router.delete('/:listingId', listingController.deleteListing);
+router.delete('/:listingId', requireUserAuth, listingController.deleteListing);
 
 module.exports = router;

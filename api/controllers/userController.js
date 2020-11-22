@@ -13,6 +13,7 @@ const nodemailer = require('nodemailer');
 const { config, helpers } = require('../../config/setup');
 const { emailMaker } = require('../../config/emailMaker');
 const validator = require('../../config/validator');
+const ChatContact = require('../models/ChatContact');
 
 module.exports.getAllUsers = async (req, res) => {
   const users = await User.findAll({
@@ -22,6 +23,7 @@ module.exports.getAllUsers = async (req, res) => {
       'lastname',
       'firstname',
       'email',
+      'isAgent',
       'uuid',
       'emailVerificationToken',
       'emailIsVerified',
@@ -38,6 +40,8 @@ module.exports.getAllUsers = async (req, res) => {
       Offer,
       { model: HostReview, isAliased: 'host' },
       { model: GuestReview, isAliased: 'guest' },
+      { model: ChatContact, as: 'inviter' },
+      { model: ChatContact, as: 'invitee' },
     ],
     order: [
       [Listing, 'createdAt', 'DESC'],
@@ -68,7 +72,7 @@ module.exports.userSignup = async (req, res) => {
   try {
     if (email) {
       email = email.toLowerCase();
-      User.sync({ alter: true });
+      // User.sync({ alter: true });
       const user = await User.create({
         email,
         password,

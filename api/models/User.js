@@ -8,6 +8,11 @@ const Agent = require('./Agent');
 const Booking = require('./Booking');
 const GuestReview = require('./GuestReview');
 const HostReview = require('./HostReview');
+const GuestReviewReply = require('./GuestReviewReply');
+const Comment = require('./Comment');
+const CommentReply = require('./CommentReply');
+const ChatContact = require('./ChatContact');
+const ChatMessage = require('./ChatMessage');
 
 class User extends Model {
   static LoginError(message, field) {
@@ -52,7 +57,7 @@ User.init(
     email: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+      // unique: true,
       validate: {
         notNull: {
           msg: 'field cannot be null',
@@ -139,7 +144,7 @@ User.init(
     username: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+      // unique: true,
       validate: {
         notNull: {
           msg: 'field cannot be null',
@@ -166,6 +171,13 @@ User.init(
     emailIsVerified: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
+    },
+    isOnline: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    lastSeen: {
+      type: DataTypes.DATE,
     },
     emailVerificationToken: {
       type: DataTypes.STRING,
@@ -254,9 +266,6 @@ User.hasMany(Listing, {
   foreignKey: 'ownerId',
 });
 
-User.hasMany(Offer, {
-  foreignKey: 'posterId',
-});
 User.hasMany(HostReview, {
   foreignKey: 'hostId',
 });
@@ -271,6 +280,40 @@ User.hasMany(GuestReview, {
 
 User.hasMany(GuestReview, {
   foreignKey: 'guestId',
+});
+
+User.hasMany(ChatContact, {
+  foreignKey: 'inviterId',
+  as: 'inviter',
+});
+
+User.hasMany(ChatContact, {
+  foreignKey: 'inviteeId',
+  as: 'invitee',
+});
+
+User.hasMany(ChatMessage, {
+  foreignKey: 'senderId',
+});
+
+User.hasMany(ChatMessage, {
+  foreignKey: 'recieverId',
+});
+
+User.hasMany(GuestReviewReply, {
+  foreignKey: 'guestReviewReplyUserId',
+});
+
+User.hasMany(Comment, {
+  foreignKey: 'commenterId',
+});
+
+User.hasMany(CommentReply, {
+  foreignKey: 'replierId',
+});
+
+GuestReviewReply.belongsTo(User, {
+  foreignKey: 'guestReviewReplyUserId',
 });
 
 User.hasOne(Agent);
@@ -279,8 +322,20 @@ Listing.belongsTo(User, {
   foreignKey: 'ownerId',
 });
 
-Offer.belongsTo(User, {
+Comment.belongsTo(User, {
+  as: 'commenter',
+});
+
+CommentReply.belongsTo(User, {
+  as: 'replier',
+});
+
+User.hasMany(Offer, {
   foreignKey: 'posterId',
+});
+
+Offer.belongsTo(User, {
+  as: 'poster',
 });
 
 Agent.belongsTo(User);
@@ -291,5 +346,9 @@ HostReview.belongsTo(User, { as: 'host' });
 HostReview.belongsTo(User, { as: 'guest' });
 GuestReview.belongsTo(User, { as: 'host' });
 GuestReview.belongsTo(User, { as: 'guest' });
+ChatContact.belongsTo(User, { as: 'inviter' });
+ChatContact.belongsTo(User, { as: 'invitee' });
+ChatMessage.belongsTo(User, { as: 'sender' });
+ChatMessage.belongsTo(User, { as: 'reciever' });
 
 module.exports = User;

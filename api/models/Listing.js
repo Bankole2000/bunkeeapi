@@ -58,6 +58,18 @@ Listing.init(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    attributes: {
+      type: DataTypes.JSON,
+    },
+    rules: {
+      type: DataTypes.JSON,
+    },
+    ammenities: {
+      type: DataTypes.JSON,
+    },
+    likedBy: {
+      type: DataTypes.JSON,
+    },
   },
   {
     sequelize: db,

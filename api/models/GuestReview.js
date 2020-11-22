@@ -1,8 +1,8 @@
 // Review from Guest about a host
 
 const { Model, Sequelize, DataTypes } = require('sequelize');
-const database = require('../../config/database');
 const db = require('../../config/database');
+const GuestReviewReply = require('./GuestReviewReply');
 
 class GuestReview extends Model {}
 
@@ -12,7 +12,7 @@ GuestReview.init(
       type: DataTypes.UUID,
       defaultValue: Sequelize.UUIDV4,
     },
-    GuestReviewerId: {
+    guestReviewerUserId: {
       type: DataTypes.INTEGER,
     },
     rating: {
@@ -33,8 +33,16 @@ GuestReview.init(
   },
   {
     sequelize: db,
-    modelName: 'GuestReview',
+    modelName: 'guestReview',
   }
 );
+
+GuestReview.hasMany(GuestReviewReply, {
+  foreignKey: 'guestReviewId',
+});
+
+GuestReviewReply.belongsTo(GuestReview, {
+  foreignKey: 'guestReviewId',
+});
 
 module.exports = GuestReview;

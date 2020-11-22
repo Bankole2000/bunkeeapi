@@ -1,33 +1,29 @@
-// Review from Host about a guest
-
 const { Model, Sequelize, DataTypes } = require('sequelize');
 const db = require('../../config/database');
+const User = require('./User');
 
-class HostReview extends Model {}
+class GuestReviewReply extends Model {}
 
-HostReview.init(
+GuestReviewReply.init(
   {
     uuid: {
       type: DataTypes.UUID,
       defaultValue: Sequelize.UUIDV4,
     },
-    hostId: {
+    guestReviewId: {
       type: DataTypes.INTEGER,
     },
-    rating: {
+    guestReviewReplyUserId: {
       type: DataTypes.INTEGER,
     },
-    reviewText: {
-      type: DataTypes.TEXT,
-    },
-    guestId: {
-      type: DataTypes.INTEGER,
+    reviewReplyText: {
+      type: DataTypes.STRING,
     },
   },
   {
     sequelize: db,
-    modelName: 'hostReview',
+    modelName: 'guestReviewReply',
   }
 );
 
-module.exports = HostReview;
+module.exports = GuestReviewReply;

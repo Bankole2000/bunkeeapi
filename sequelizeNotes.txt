@@ -52,10 +52,48 @@ Output:
 
 Note that every bar instance eager loaded into the "Bars" property has an extra property called Foo_Bar which is the relevant Sequelize instance of the junction model. By default, Sequelize fetches all attributes from the junction table in order to build this extra property.
 
+A way to store none
+{
+  "condition": "and",
+  "rules": [
+    // Boolean Rules
+    rules : [ 
+      {
+      "rule": "children Allowed",
+      "value": false, 
+      "description": "Because they make a lot of noise",
+      }
+    ], 
+    // Boolean Attributes 
+    // Descriptive Attributes
+     categories ['Ventilation', 'Art / Paintings', 'Environment', 'Security',] 
+    amenities: [
+      {
+        "category": "", 
+        "description": "",
+      }
+    ]
+  [
+    {
+      "field": "age",
+      "operator": "<=",
+      "entity": "physical",
+      "value": 10
+    },
+    {
+      "field": "birthday",
+      "operator": "=",
+      "entity": "nonphysical",
+      "value": "2019-11-10T13:46:54.128Z"
+    }
+  ]
+}
 
+Types of Other rules 
+['Security', 'Safety', 'State/Local Law', 'Compound Rule', 'Expenses', 'Inconvenience', 'Other']
 
-
-
+Boolean Ammenities 
+has AC, has24hr power supply, hasParkingSpace, hasTapWater, hasWaterHeater, hasIron, hasWashingMachine, hasTV, 
 
 
 

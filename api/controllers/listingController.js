@@ -1,13 +1,18 @@
 const { helpers, config } = require('../../config/setup');
 const Listing = require('../models/Listing');
+const User = require('../models/User');
 const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
 const ListingImage = require('../models/ListingImage');
+const { Op } = require('sequelize');
+const Offer = require('../models/Offer');
 
 module.exports.getAllListings = async (req, res) => {
   try {
-    const listings = await Listing.findAll();
+    const listings = await Listing.findAndCountAll({
+      include: [ListingImage, User],
+    });
     res.status(200).json(listings);
   } catch (err) {
     let errors = helpers.handleErrors(err);
@@ -16,6 +21,43 @@ module.exports.getAllListings = async (req, res) => {
   res.status(200).json({
     message: 'Get all Host Listings is working',
   });
+};
+
+module.exports.getListingsByLocationState = async (req, res) => {
+  const noPerPage = 5;
+  let offset, limit;
+
+  let { state, page } = req.query;
+  page = page ? page : 1;
+  offset = (page - 1) * noPerPage;
+  limit = offset + noPerPage;
+  const stateSearchString = `${state} State`;
+  try {
+    const listings = await Listing.findAndCountAll({
+      where: {
+        [Op.or]: [
+          { locationState: stateSearchString },
+          { locationCity: state },
+        ],
+        [Op.or]: {
+          locationState: {
+            [Op.substring]: state,
+          },
+          locationCity: {
+            [Op.substring]: state,
+          },
+        },
+      },
+      include: [ListingImage, User],
+      offset,
+      limit,
+    });
+    res.status(200).json({ message: 'Successful', listings, offset, page });
+  } catch (err) {
+    console.log(err);
+    let errors = helpers.handleErrors(err);
+    res.status(400).json(errors);
+  }
 };
 
 module.exports.createAListing = async (req, res) => {
@@ -47,12 +89,15 @@ module.exports.getSingleListingDetails = async (req, res) => {
   const id = req.params.listingId;
   try {
     const listing = await Listing.findByPk(id, {
-      include: [ListingImage],
+      include: [ListingImage, User],
     });
     if (listing) {
       res.status(200).json({ message: 'Listing Details', listing });
     } else {
-      res.status(404).json({ message: 'Found Listing', listing });
+      throw helpers.generateError(
+        `No listing Found with id - ${id}`,
+        'Listing Id'
+      );
     }
   } catch (err) {
     console.log(err);
@@ -86,7 +131,54 @@ module.exports.updateListing = async (req, res) => {
     let errors = helpers.handleErrors(err);
     res.status(400).json(errors);
   }
-  res.status(200).json({ message: 'update Host Listing By Id' });
+};
+
+module.exports.deleteListingImage = async (req, res, next) => {
+  console.log(req.body);
+  const { listingId, index } = req.params;
+  try {
+    listing = await Listing.findByPk(listingId, { include: [ListingImage] });
+    if (req.userId == listing.ownerId) {
+      if (listing) {
+        const hasListingImage = await ListingImage.findOne({
+          where: { listingId, listingOrder: index },
+        });
+        if (hasListingImage) {
+          fs.unlinkSync(hasListingImage.filePath);
+          fs.unlinkSync(hasListingImage.resizedFilePath);
+          await ListingImage.destroy({
+            where: { listingId, listingOrder: index },
+          });
+          listing.listingImages.splice(
+            listing.listingImages.findIndex((v) => v.listingOrder === index),
+            1
+          );
+          res.status(200).json({
+            message: 'Listing Image deleted',
+            listing,
+          });
+        } else {
+          throw helpers.generateError(
+            `listing with id - ${listingId} doesn't have an image with index ${index}`,
+            'listingId'
+          );
+        }
+      } else {
+        throw helpers.generateError(
+          `No listing with the id ${id}`,
+          'listingId'
+        );
+      }
+    } else {
+      throw helpers.generateError(
+        `You don't own this listing, sorry`,
+        'Auth - Actor is not owner'
+      );
+    }
+  } catch (err) {
+    let errors = helpers.handleErrors(err);
+    res.status(404).json(errors);
+  }
 };
 
 module.exports.uploadListingImage = async (req, res, next) => {
@@ -101,24 +193,178 @@ module.exports.uploadListingImage = async (req, res, next) => {
     .then((info) => console.log(info));
   // fs.unlinkSync(req.file.path);
   const listingId = req.params.listingId;
-  listing = await Listing.findByPk(listingId);
-  listingImage = await ListingImage.create({
-    imageResizedUrl: `${config.baseUrl}/uploads/${req.userId}/listingimages/resized/${req.file.filename}`,
-    imageFullsizeUrl: `${config.baseUrl}/uploads/${req.userId}/listingimages/${req.file.filename}`,
-    listingOrder: req.body.index,
-    userGivenName: req.body.userGivenName,
-  });
-  await listing.addListingImage(listingImage);
-  // console.log(req.file);
-  res.status(200).json({
-    message: 'uploaded Listing Image',
-    filePath: path.resolve(req.file.destination, 'resized', listingImage),
-    imageResizedUrl: `${config.baseUrl}/uploads/${req.userId}/listingimages/resized/${req.file.filename}`,
-    imageFullsizeUrl: `${config.baseUrl}/uploads/${req.userId}/listingimages/${req.file.filename}`,
-    listingOrder: req.body.index,
-  });
+  try {
+    listing = await Listing.findByPk(listingId, { include: [ListingImage] });
+    if (listing) {
+      hasListingImage = await ListingImage.findOne({
+        where: { listingId, listingOrder: req.body.index },
+      });
+      if (hasListingImage) {
+        fs.unlinkSync(hasListingImage.filePath);
+        fs.unlinkSync(hasListingImage.resizedFilePath);
+
+        hasListingImage.update({
+          filePath: req.file.path,
+          resizedFilePath: `${req.file.destination}/resized/${req.file.filename}`,
+          imageResizedUrl: `${config.baseUrl}/uploads/${req.userId}/listingimages/resized/${req.file.filename}`,
+          imageFullsizeUrl: `${config.baseUrl}/uploads/${req.userId}/listingimages/${req.file.filename}`,
+          listingOrder: req.body.index,
+          userGivenName: req.body.userGivenName,
+        });
+        res.status(200).json({
+          message: 'updated Listing Image',
+          resizedFilePath: `${req.file.destination}/resized/${req.file.filename}`,
+          filePath: path.resolve(req.file.destination, 'resized', listingImage),
+          imageResizedUrl: `${config.baseUrl}/uploads/${req.userId}/listingimages/resized/${req.file.filename}`,
+          imageFullsizeUrl: `${config.baseUrl}/uploads/${req.userId}/listingimages/${req.file.filename}`,
+          listingOrder: req.body.index,
+          listing,
+          hasListingImage,
+        });
+      } else {
+        newListingImage = await ListingImage.create({
+          filePath: req.file.path,
+          resizedFilePath: `${req.file.destination}/resized/${req.file.filename}`,
+          imageResizedUrl: `${config.baseUrl}/uploads/${req.userId}/listingimages/resized/${req.file.filename}`,
+          imageFullsizeUrl: `${config.baseUrl}/uploads/${req.userId}/listingimages/${req.file.filename}`,
+          listingOrder: req.body.index,
+          userGivenName: req.body.userGivenName,
+        });
+
+        await listing.addListingImage(newListingImage);
+        res.status(200).json({
+          message: 'uploaded Listing Image',
+          filePath: req.file.path,
+          resizedFilePath: path.resolve(
+            req.file.destination,
+            'resized',
+            listingImage
+          ),
+          imageResizedUrl: `${config.baseUrl}/uploads/${req.userId}/listingimages/resized/${req.file.filename}`,
+          imageFullsizeUrl: `${config.baseUrl}/uploads/${req.userId}/listingimages/${req.file.filename}`,
+          listingOrder: req.body.index,
+          listing,
+          newListingImage,
+        });
+      }
+    } else {
+      throw helpers.generateError(`No listing with the id ${id}`, 'listingId');
+    }
+  } catch (err) {
+    let errors = helpers.handleErrors(err);
+    res.status(404).json(errors);
+  }
 };
 
-module.exports.deleteListing = (req, res) => {
-  res.status(200).json({ message: 'Delete Host Listing by Id' });
+module.exports.deleteListing = async (req, res) => {
+  const { listingId } = req.params;
+  try {
+    const listing = await Listing.findByPk(listingId, {
+      include: [ListingImage],
+    });
+    if (listing) {
+      if (listing.ownerId == req.userId) {
+        if (listing.listingImages.length > 0) {
+          listing.listingImages.forEach((image) => {
+            fs.unlinkSync(image.filePath);
+            fs.unlinkSync(image.resizedFilePath);
+          });
+        }
+        await Listing.destroy({
+          where: {
+            id: listingId,
+            ownerId: req.userId,
+          },
+        });
+        res.status(200).json({
+          message: `listing with ${listingId} deleted`,
+        });
+      } else {
+        throw helpers.generateError(
+          `You don't own this listing, sorry`,
+          'Auth - Actor is not owner'
+        );
+      }
+    } else {
+      throw helpers.generateError(
+        `No listing with the id ${listingId}`,
+        'listingId'
+      );
+    }
+  } catch (err) {
+    console.log(err);
+    let errors = helpers.handleErrors(err);
+    res.status(404).json({ errors, err });
+  }
 };
+
+module.exports.likeListing = async (req, res) => {
+  // Listing.sync({ alter: true });
+  const { listingId } = req.params;
+  const userId = req.userId;
+  console.log(listingId, userId);
+  try {
+    let listing = await Listing.findByPk(listingId);
+    if (listing) {
+      const likers = listing.likedBy ? JSON.parse(listing.likedBy) : [];
+      if (likers.includes(userId)) {
+        likers.splice(likers.indexOf(userId), 1);
+        const result = await Listing.update(
+          { likedBy: likers },
+          { where: { id: listingId } }
+        );
+        if (result[0]) {
+          listing = await Listing.findByPk(listingId);
+          res.status(200).json({
+            message: `User - ${userId} Disliked Listing - ${listingId}`,
+            listing,
+          });
+        } else {
+          res
+            .status(500)
+            .json({ message: `Couldn't update Listing - Server error` });
+        }
+      } else {
+        likers.push(userId);
+        const result = await Listing.update(
+          { likedBy: likers },
+          { where: { id: listingId } }
+        );
+        if (result[0]) {
+          listing = await Listing.findByPk(listingId);
+          res.status(200).json({
+            message: `User - ${userId} Liked Listing - ${listingId}`,
+            listing,
+          });
+        } else {
+          res
+            .status(500)
+            .json({ message: `Couldn't update Listing - Server error` });
+        }
+      }
+    } else {
+      throw helpers.generateError(
+        `No listing with id - ${listingId} - Not Found`,
+        'Listing Id'
+      );
+    }
+  } catch (err) {
+    console.log(err);
+    let errors = helpers.handleErrors(err);
+    res.status(400).json(errors);
+  }
+};
+
+// module.exports = function (io) {
+//   //Socket.IO
+//   io.on('connection', function (socket) {
+//     console.log('User has connected to Index');
+//     //ON Events
+//     socket.on('admin', function () {
+//       console.log('Successful Socket Test');
+//     });
+
+//     //End ON Events
+//   });
+//   return router;
+// };

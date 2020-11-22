@@ -21,7 +21,7 @@ const config = {
   baseUrl: isLocal
     ? `http://localhost:${process.env.PORT || 5000}`
     : remote.apiUrl,
-  appUrl: isLocal ? '' : remote.appUrl,
+  appUrl: isLocal ? 'http://localhost:8080' : remote.appUrl,
   db: isLocal ? 'bunkeeapi' : remote.db,
   user: isLocal ? 'nodejs' : remote.user,
   password: isLocal ? 'nodejs' : remote.password,

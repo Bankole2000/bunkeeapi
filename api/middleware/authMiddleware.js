@@ -13,7 +13,7 @@ const requireUserAuth = (req, res, next) => {
           } else {
             req.userId = user.id;
 
-            console.log(user, req.userId);
+            // console.log(user, req.userId);
             next();
           }
         });
@@ -27,8 +27,6 @@ const requireUserAuth = (req, res, next) => {
     let errors = helpers.handleErrors(err);
     res.status(401).json(errors);
   }
-  // console.log(token);
-  // console.log(req.headers);
 };
 
 const requireUserSelfAuth = (req, res, next) => {

@@ -1,17 +1,53 @@
 const express = require('express');
 const morgan = require('morgan');
+const http = require('http');
 // const multer = require('multer');
 // const upload = multer({ dest: 'uploads/' });
 const bodyParser = require('body-parser');
 const { config } = require('./config/setup');
 const db = require('./config/database.js');
 const app = express();
+const server = http.createServer(app);
+
+const io = require('socket.io')(server, {
+  cors: {
+    origin: `${config.appUrl}`,
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['my-custom-header'],
+    credentials: true,
+  },
+});
+
+io.on('connection', (socket) => {
+  console.log(`Socket Connected! ${socket.id}`);
+  // socket.emit('position', position);
+  // socket.on('like', (data) => {
+  //   console.log(data);
+  //   io.sockets.emit('like', data);
+  // });
+  // socket.on('chatMessage', (data) => {
+  //   console.log(data);
+  //   socket.emit('chatMessage', data);
+  // });
+  socket.on('login', (user) => {
+    console.log('user logged In');
+    io.emit('newLogin', user);
+  });
+  socket.on('logout', (user) => {
+    console.log(user);
+    console.log(`${user.username} logged out`);
+  });
+  socket.on('disconnect', () => {
+    console.log('user logged out');
+  });
+});
+
+server.listen(3000);
 
 app.use(morgan('dev'));
 app.use('/uploads', express.static('uploads'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
 // CORS stuff
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -39,25 +75,33 @@ db.authenticate()
   .catch((err) => console.log(`err => ${err}`));
 
 // Routes
+// const testRoutes = require('./api/routes/testRoutes')(app, io);
 const userRoutes = require('./api/routes/userRoutes');
 const rentalRoutes = require('./api/routes/rentalRoutes');
 const offerRoutes = require('./api/routes/offerRoutes');
 const listingRoutes = require('./api/routes/listingRoutes');
 const bookingRoutes = require('./api/routes/bookingRoutes');
+const singleUserRoutes = require('./api/routes/singleUserRoutes');
+const chatRoutes = require('./api/routes/chatRoutes');
 
-app.get('/', (req, res) => res.json({ message: 'Welcome to the Bunkee api' }));
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to the Bunkee api' });
+});
+
 app.use('/users', userRoutes);
+app.use('/user', singleUserRoutes);
 app.use('/bookings', bookingRoutes);
 app.use('/listings', listingRoutes);
 app.use('/offers', offerRoutes);
 app.use('/rentals', rentalRoutes);
+app.use('/chat', chatRoutes);
 // app.post('/listingImage', upload.single('listingImage'), (req, res, next) => {
 //   console.log(req.file);
 //   res.status(200).json({ message: 'uploaded file' });
 // });
 
-app.use((req, res, next) => {
-  res.status(404).json({
-    message: `This route doesn't exist - here's some helpful tips`,
-  });
-});
+// app.use((req, res, next) => {
+//   res.status(200).json({
+//     message: `This route doesn't exist - here's some helpful tips`,
+//   });
+// });
