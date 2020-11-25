@@ -164,6 +164,9 @@ User.init(
         },
       },
     },
+    currentSocketId: {
+      type: DataTypes.STRING,
+    },
     phone: {
       type: DataTypes.STRING,
       allowNull: true,

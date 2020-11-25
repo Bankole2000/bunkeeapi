@@ -13,14 +13,19 @@ module.exports.getAllListings = async (req, res) => {
     const listings = await Listing.findAndCountAll({
       include: [ListingImage, User],
     });
+    listings.rows.forEach((listing) => {
+      console.log(listing);
+      listing.dataValues.rules = JSON.parse(listing.dataValues.rules);
+      listing.dataValues.amenities = JSON.parse(listing.dataValues.amenities);
+      listing.dataValues.specialFeatures = JSON.parse(
+        listing.dataValues.specialFeatures
+      );
+    });
     res.status(200).json(listings);
   } catch (err) {
     let errors = helpers.handleErrors(err);
     res.status(400).json(errors);
   }
-  res.status(200).json({
-    message: 'Get all Host Listings is working',
-  });
 };
 
 module.exports.getListingsByLocationState = async (req, res) => {
@@ -51,6 +56,13 @@ module.exports.getListingsByLocationState = async (req, res) => {
       include: [ListingImage, User],
       offset,
       limit,
+    });
+    listings.rows.forEach((listing) => {
+      listing.dataValues.rules = JSON.parse(listing.dataValues.rules);
+      listing.dataValues.amenities = JSON.parse(listing.dataValues.amenities);
+      listing.dataValues.specialFeatures = JSON.parse(
+        listing.dataValues.specialFeatures
+      );
     });
     res.status(200).json({ message: 'Successful', listings, offset, page });
   } catch (err) {
@@ -92,6 +104,11 @@ module.exports.getSingleListingDetails = async (req, res) => {
       include: [ListingImage, User],
     });
     if (listing) {
+      listing.dataValues.rules = JSON.parse(listing.dataValues.rules);
+      listing.dataValues.amenities = JSON.parse(listing.dataValues.amenities);
+      listing.dataValues.specialFeatures = JSON.parse(
+        listing.dataValues.specialFeatures
+      );
       res.status(200).json({ message: 'Listing Details', listing });
     } else {
       throw helpers.generateError(
@@ -120,6 +137,15 @@ module.exports.updateListing = async (req, res) => {
       const updatedListing = await Listing.findByPk(id, {
         include: [ListingImage],
       });
+      updatedListing.dataValues.amenities = JSON.parse(
+        updatedListing.dataValues.amenities
+      );
+      updatedListing.dataValues.rules = JSON.parse(
+        updatedListing.dataValues.rules
+      );
+      updatedListing.dataValues.specialFeatures = JSON.parse(
+        updatedListing.dataValues.specialFeatures
+      );
       res.status(200).json({
         message: `updated Listing with id ${id}`,
         listing: updatedListing,

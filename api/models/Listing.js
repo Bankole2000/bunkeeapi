@@ -12,6 +12,13 @@ Listing.init(
       type: DataTypes.UUID,
       defaultValue: Sequelize.UUIDV4,
     },
+    isSponsored: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    ratings: {
+      type: DataTypes.JSON,
+    },
     ownerId: {
       type: DataTypes.INTEGER,
     },
@@ -27,9 +34,32 @@ Listing.init(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
-    pricePerNight: {
+    basicPrice: {
       type: DataTypes.INTEGER,
       defaultValue: 0,
+    },
+    pricePerWeekend: {
+      type: DataTypes.INTEGER,
+    },
+    pricePerWeek: {
+      type: DataTypes.INTEGER,
+    },
+    pricePerMonth: {
+      type: DataTypes.INTEGER,
+    },
+    guestArrivalDaysNotice: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    bookMonthsInAdvance: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    bookingStayDaysMin: {
+      type: DataTypes.INTEGER,
+    },
+    bookingStayDaysMax: {
+      type: DataTypes.INTEGER,
     },
     locationState: {
       type: DataTypes.STRING,
@@ -64,7 +94,10 @@ Listing.init(
     rules: {
       type: DataTypes.JSON,
     },
-    ammenities: {
+    amenities: {
+      type: DataTypes.JSON,
+    },
+    specialFeatures: {
       type: DataTypes.JSON,
     },
     likedBy: {
