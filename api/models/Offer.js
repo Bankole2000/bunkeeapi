@@ -1,6 +1,7 @@
 const { Model, Sequelize, DataTypes } = require('sequelize');
 const db = require('../../config/database');
 const Comment = require('./Comment');
+const Promotion = require('./Promotion');
 
 class Offer extends Model {
   getNoOfLikes() {
@@ -70,6 +71,20 @@ Offer.init(
 
 Offer.hasMany(Comment, {
   foreignKey: 'offerId',
+});
+
+Offer.hasMany(Promotion, {
+  foreignKey: 'promotableId',
+  scope: {
+    promotable: 'offer',
+  },
+});
+
+Promotion.belongsTo(Offer, {
+  foreignKey: 'promotableId',
+  scope: {
+    promotable: 'offer',
+  },
 });
 
 Comment.belongsTo(Offer, {

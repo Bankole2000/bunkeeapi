@@ -32,6 +32,7 @@ module.exports.getUserContacts = async (req, res) => {
         include: [
           { model: User, as: 'inviter' },
           { model: User, as: 'invitee' },
+          { model: ChatMessage, as: 'conversation' },
         ],
       });
       res
@@ -82,24 +83,31 @@ module.exports.sendMessageToContact = async (req, res) => {
   const { userId } = req;
   const { contactId } = req.params;
   const { messageText, senderId, recieverId } = req.body;
+  console.log({ body: req.body, recieverId, senderId, messageText, contactId });
   try {
     const user = await User.findByPk(userId);
     if (user) {
       const contact = await ChatContact.findByPk(contactId);
       if (contact) {
-        await ChatMessage.create({
+        newChatMessage = await ChatMessage.create({
           messageText,
           senderId: senderId || userId,
           recieverId,
-          conversationId: contact.id,
+          conversationId: contactId,
         });
-        updatedContact = await ChatContact.findByPk(contactId, {
-          include: [{ model: ChatMessage, as: 'conversation' }],
+        // updatedContact = await ChatContact.findByPk(contactId, {
+        //   include: [{ model: ChatMessage, as: 'conversation' }],
+        // });
+        // console.log(updatedContact);
+        res.status(200).json({
+          message: `Chat Message sent`,
+          messageContent: newChatMessage,
         });
-        console.log(updatedContact);
-        res
-          .status(200)
-          .json({ message: `Chat Message sent`, messages: updatedContact });
+      } else {
+        throw helpers.generateError(
+          `No such Contact - ${contactId} Not Found`,
+          'contactId'
+        );
       }
     } else {
       throw helpers.generateError(`Unauthenticated - Please Login`, 'userId');
@@ -252,6 +260,41 @@ module.exports.sendChatInvite = async (req, res) => {
         `Unauthorized - ${userId} - Not Found`,
         'userId'
       );
+    }
+  } catch (err) {
+    console.log(err);
+    let errors = helpers.handleErrors(err);
+    res.status(400).json(errors);
+  }
+};
+
+module.exports.pingInvitee = async (req, res) => {
+  const { userId } = req;
+  const { contactId, recieverId } = req.params;
+  try {
+    const user = await User.findByPk(userId);
+    if (user) {
+      const contact = await ChatContact.findByPk(contactId);
+      if (contact) {
+        const pingMessage = await ChatMessage.create({
+          messageText: `Ping! 👋`,
+          senderId: userId,
+          recieverId,
+          conversationId: contact.id,
+          hasBeenDelivered: false,
+        });
+        console.log(pingMessage);
+        res
+          .status(200)
+          .json({ message: `Pinged User - ${recieverId}`, pingMessage });
+      } else {
+        throw helpers.generateError(
+          `Contact with id - ${contactId} - Not found`,
+          'contactId'
+        );
+      }
+    } else {
+      throw helpers.generateError('Unauthorized - Not logged in', 'userId');
     }
   } catch (err) {
     console.log(err);

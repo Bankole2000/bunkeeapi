@@ -7,19 +7,21 @@ const fs = require('fs');
 const ListingImage = require('../models/ListingImage');
 const { Op } = require('sequelize');
 const Offer = require('../models/Offer');
+const Promotion = require('../models/Promotion');
 
 module.exports.getAllListings = async (req, res) => {
   try {
     const listings = await Listing.findAndCountAll({
-      include: [ListingImage, User],
+      include: [ListingImage, User, Promotion],
     });
     listings.rows.forEach((listing) => {
       console.log(listing);
-      listing.dataValues.rules = JSON.parse(listing.dataValues.rules);
-      listing.dataValues.amenities = JSON.parse(listing.dataValues.amenities);
-      listing.dataValues.specialFeatures = JSON.parse(
-        listing.dataValues.specialFeatures
-      );
+      listing.dataValues.rules = listing.getRules();
+      listing.dataValues.amenities = listing.getAmenities();
+      listing.dataValues.specialFeatures = listing.getSpecialFeatures();
+      listing.dataValues.finalDescriptions = listing.getFinalDescriptions();
+      listing.dataValues.utilities = listing.getUtilities();
+      listing.dataValues.guestPreferences = listing.getGuestPreferences();
     });
     res.status(200).json(listings);
   } catch (err) {
@@ -58,11 +60,13 @@ module.exports.getListingsByLocationState = async (req, res) => {
       limit,
     });
     listings.rows.forEach((listing) => {
-      listing.dataValues.rules = JSON.parse(listing.dataValues.rules);
-      listing.dataValues.amenities = JSON.parse(listing.dataValues.amenities);
-      listing.dataValues.specialFeatures = JSON.parse(
-        listing.dataValues.specialFeatures
-      );
+      // listing.dataValues.rules = JSON.parse(listing.dataValues.rules);
+      listing.dataValues.rules = listing.getRules();
+      listing.dataValues.amenities = listing.getAmenities();
+      listing.dataValues.specialFeatures = listing.getSpecialFeatures();
+      listing.dataValues.finalDescriptions = listing.getFinalDescriptions();
+      listing.dataValues.utilities = listing.getUtilities();
+      listing.dataValues.guestPreferences = listing.getGuestPreferences();
     });
     res.status(200).json({ message: 'Successful', listings, offset, page });
   } catch (err) {
@@ -104,11 +108,12 @@ module.exports.getSingleListingDetails = async (req, res) => {
       include: [ListingImage, User],
     });
     if (listing) {
-      listing.dataValues.rules = JSON.parse(listing.dataValues.rules);
-      listing.dataValues.amenities = JSON.parse(listing.dataValues.amenities);
-      listing.dataValues.specialFeatures = JSON.parse(
-        listing.dataValues.specialFeatures
-      );
+      listing.dataValues.rules = listing.getRules();
+      listing.dataValues.amenities = listing.getAmenities();
+      listing.dataValues.specialFeatures = listing.getSpecialFeatures();
+      listing.dataValues.finalDescriptions = listing.getFinalDescriptions();
+      listing.dataValues.utilities = listing.getUtilities();
+      listing.dataValues.guestPreferences = listing.getGuestPreferences();
       res.status(200).json({ message: 'Listing Details', listing });
     } else {
       throw helpers.generateError(
@@ -137,15 +142,12 @@ module.exports.updateListing = async (req, res) => {
       const updatedListing = await Listing.findByPk(id, {
         include: [ListingImage],
       });
-      updatedListing.dataValues.amenities = JSON.parse(
-        updatedListing.dataValues.amenities
-      );
-      updatedListing.dataValues.rules = JSON.parse(
-        updatedListing.dataValues.rules
-      );
-      updatedListing.dataValues.specialFeatures = JSON.parse(
-        updatedListing.dataValues.specialFeatures
-      );
+      updatedListing.dataValues.amenities = updatedListing.getAmenities();
+      updatedListing.dataValues.rules = updatedListing.getRules();
+      updatedListing.dataValues.specialFeatures = updatedListing.getSpecialFeatures();
+      updatedListing.dataValues.finalDescriptions = updatedListing.getFinalDescriptions();
+      updatedListing.dataValues.utilities = updatedListing.getUtilities();
+      updatedListing.dataValues.guestPreferences = updatedListing.getGuestPreferences();
       res.status(200).json({
         message: `updated Listing with id ${id}`,
         listing: updatedListing,
@@ -154,6 +156,7 @@ module.exports.updateListing = async (req, res) => {
       res.status(404).json({ message: `Unable to update Listing` });
     }
   } catch (err) {
+    console.log(err);
     let errors = helpers.handleErrors(err);
     res.status(400).json(errors);
   }
@@ -332,7 +335,7 @@ module.exports.likeListing = async (req, res) => {
   try {
     let listing = await Listing.findByPk(listingId);
     if (listing) {
-      const likers = listing.likedBy ? JSON.parse(listing.likedBy) : [];
+      const likers = listing.likedBy ? listing.getLikedBy() : [];
       if (likers.includes(userId)) {
         likers.splice(likers.indexOf(userId), 1);
         const result = await Listing.update(

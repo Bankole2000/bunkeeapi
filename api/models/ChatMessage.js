@@ -18,12 +18,15 @@ ChatMessage.init(
     },
     messageImageUrl: {
       type: DataTypes.STRING,
+      defaultValue: null,
     },
     senderId: {
       type: DataTypes.INTEGER,
+      allowNull: false,
     },
     recieverId: {
       type: DataTypes.INTEGER,
+      allowNull: false,
     },
     hasBeenRead: {
       type: DataTypes.BOOLEAN,

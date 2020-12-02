@@ -9,12 +9,12 @@ const chatController = require('../controllers/chatController');
 router.get('/contacts', requireUserAuth, chatController.getUserContacts);
 router.get('/invites', chatController.getAllInvites);
 router.get(
-  '/messages/:contactId',
+  '/contacts/:contactId/messages',
   requireUserAuth,
   chatController.getUserMessagesWithChattee
 );
 router.post(
-  '/messages/:contactId',
+  '/contacts/:contactId/messages',
   requireUserAuth,
   chatController.sendMessageToContact
 );
@@ -22,6 +22,11 @@ router.post(
   '/invites/:chatteeId',
   requireUserAuth,
   chatController.sendChatInvite
+);
+router.post(
+  '/contacts/:contactId/ping/:recieverId',
+  requireUserAuth,
+  chatController.pingInvitee
 );
 router.patch(
   '/invites/:inviteId',

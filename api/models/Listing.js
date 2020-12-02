@@ -3,8 +3,31 @@ const db = require('../../config/database');
 const ListingImage = require('./ListingImage');
 const Booking = require('./Booking');
 const GuestReview = require('./GuestReview');
+const Promotion = require('./Promotion');
 
-class Listing extends Model {}
+class Listing extends Model {
+  getRules() {
+    return this.rules ? JSON.parse(this.rules) : null;
+  }
+  getAmenities() {
+    return this.amenities ? JSON.parse(this.amenities) : null;
+  }
+  getSpecialFeatures() {
+    return this.specialFeatures ? JSON.parse(this.specialFeatures) : null;
+  }
+  getFinalDescriptions() {
+    return this.finalDescriptions ? JSON.parse(this.finalDescriptions) : null;
+  }
+  getUtilities() {
+    return this.utilities ? JSON.parse(this.utilities) : null;
+  }
+  getGuestPreferences() {
+    return this.guestPreferences ? JSON.parse(this.guestPreferences) : null;
+  }
+  getLikedBy() {
+    return this.likedBy ? JSON.parse(this.likedBy) : null;
+  }
+}
 
 Listing.init(
   {
@@ -30,6 +53,12 @@ Listing.init(
       type: DataTypes.TEXT,
       allowNull: false,
     },
+    utilities: {
+      type: DataTypes.JSON,
+    },
+    guestPreferences: {
+      type: DataTypes.JSON,
+    },
     isPrivate: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
@@ -51,7 +80,7 @@ Listing.init(
       type: DataTypes.INTEGER,
       defaultValue: 0,
     },
-    bookMonthsInAdvance: {
+    guestBookingMonthsInAdvance: {
       type: DataTypes.INTEGER,
       defaultValue: 0,
     },
@@ -88,7 +117,7 @@ Listing.init(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
-    attributes: {
+    finalDescriptions: {
       type: DataTypes.JSON,
     },
     rules: {
@@ -115,7 +144,19 @@ Listing.hasMany(ListingImage, {
 });
 
 Listing.hasMany(Booking);
+Listing.hasMany(Promotion, {
+  foreignKey: 'promotableId',
+  scope: {
+    promotable: 'listing',
+  },
+});
 Listing.hasMany(GuestReview);
+Promotion.belongsTo(Listing, {
+  foreignKey: 'promotableId',
+  scope: {
+    promotable: 'listing',
+  },
+});
 
 ListingImage.belongsTo(Listing);
 GuestReview.belongsTo(Listing);

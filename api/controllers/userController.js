@@ -24,6 +24,8 @@ module.exports.getAllUsers = async (req, res) => {
       'firstname',
       'email',
       'isAgent',
+      'isOnline',
+      'lastSeen',
       'uuid',
       'emailVerificationToken',
       'emailIsVerified',

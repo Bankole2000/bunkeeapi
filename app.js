@@ -8,6 +8,7 @@ const { config } = require('./config/setup');
 const db = require('./config/database.js');
 const app = express();
 const server = http.createServer(app);
+const { userMethods } = require('./utils/socketUtils');
 
 const io = require('socket.io')(server, {
   cors: {
@@ -29,16 +30,49 @@ io.on('connection', (socket) => {
   //   console.log(data);
   //   socket.emit('chatMessage', data);
   // });
-  socket.on('login', (user) => {
-    console.log('user logged In');
-    io.emit('newLogin', user);
+  socket.on('login', async (data) => {
+    console.log('user logged In', { user: data.user.id });
+    const updatedUser = await userMethods.updateLoggedInStatus(
+      data.user.id,
+      true,
+      socket.id
+    );
+    console.log({ updatedUser: updatedUser.dataValues });
+    io.emit('newLogin', updatedUser);
   });
-  socket.on('logout', (user) => {
+  socket.on('logout', async (user) => {
     console.log(user);
+    const updatedUser = await userMethods.updateLoggedInStatus(user.id, false);
     console.log(`${user.username} logged out`);
+    io.emit('userLogout', updatedUser);
+  });
+  socket.on('chatMessage', (data) => {
+    console.log(data);
+    io.to(data.chattee.currentSocketId).emit('chatMessage', data.message);
+  });
+  socket.on('pingMessage', (data) => {
+    console.log(data);
+    io.to(data.chattee.currentSocketId).emit(
+      'pingMessage',
+      data.data.pingMessage
+    );
+  });
+  socket.on('allRead', (data) => {
+    userMethods.allChatRead(
+      data.contactId,
+      data.senderId,
+      data.hasBeenDelivered,
+      data.hasBeenRead
+    );
+    console.log(data);
+    io.to(data.socketId).emit('allRead', data);
+  });
+  socket.on('deleteContact', (data) => {
+    console.table(data);
+    io.to(data.socketId).emit('deleteContact', data);
   });
   socket.on('disconnect', () => {
-    console.log('user logged out');
+    console.log('socket Disconnected');
   });
 });
 
@@ -83,6 +117,7 @@ const listingRoutes = require('./api/routes/listingRoutes');
 const bookingRoutes = require('./api/routes/bookingRoutes');
 const singleUserRoutes = require('./api/routes/singleUserRoutes');
 const chatRoutes = require('./api/routes/chatRoutes');
+const { watch } = require('fs');
 
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the Bunkee api' });
