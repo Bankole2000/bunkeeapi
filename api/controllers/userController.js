@@ -29,6 +29,7 @@ module.exports.getAllUsers = async (req, res) => {
       'uuid',
       'emailVerificationToken',
       'emailIsVerified',
+      'currentSocketId',
     ],
     include: [
       Agent,

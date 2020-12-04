@@ -46,6 +46,10 @@ io.on('connection', (socket) => {
     console.log(`${user.username} logged out`);
     io.emit('userLogout', updatedUser);
   });
+  socket.on('typing', (data) => {
+    console.log(data);
+    io.to(data.socketId).emit('isTyping', data);
+  });
   socket.on('chatMessage', (data) => {
     console.log(data);
     io.to(data.chattee.currentSocketId).emit('chatMessage', data.message);
@@ -71,8 +75,14 @@ io.on('connection', (socket) => {
     console.table(data);
     io.to(data.socketId).emit('deleteContact', data);
   });
-  socket.on('disconnect', () => {
-    console.log('socket Disconnected');
+  socket.on('disconnect', async () => {
+    console.log('socket Disconnected', socket.id);
+    const updatedUser = await userMethods.updateUserSocketDisconnected(
+      socket.id
+    );
+    if (updatedUser) {
+      io.emit('userLogout', updatedUser);
+    }
   });
 });
 

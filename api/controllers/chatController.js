@@ -312,14 +312,14 @@ module.exports.respondToChatInvite = async (req, res) => {
     if (user) {
       const invite = await ChatContact.findByPk(inviteId);
       if (invite) {
-        if (invite.inviterId == user.id || invite.inviteeId == user.id) {
+        if (invite.inviteeId == user.id) {
           const updateData = {};
           for (const data of req.body) {
             updateData[data.name] = data.value;
           }
           //
           if (
-            (updateData.hasBeenAccepted || updateData.hasBeenAccepted) &&
+            (updateData.hasBeenAccepted || updateData.hasBeenDeclined) &&
             user.id == invite.inviteeId
           ) {
             const result = await ChatContact.update(updateData, {
@@ -327,10 +327,21 @@ module.exports.respondToChatInvite = async (req, res) => {
             });
             if (result[0]) {
               const updatedInvite = await ChatContact.findByPk(inviteId);
-              res.status(200).json({
-                message: `updated Invite with id - ${inviteId}`,
-                invite: updatedInvite,
-              });
+              if (updatedInvite.hasBeenAccepted) {
+                res.status(200).json({
+                  message: `updated Invite with id - ${inviteId}`,
+                  invite: updatedInvite,
+                  accepted: true,
+                  declined: false,
+                });
+              } else if (updatedInvite.hasBeenDeclined) {
+                res.status(200).json({
+                  message: `updated Invite with id - ${inviteId}`,
+                  invite: updatedInvite,
+                  accepted: false,
+                  declined: true,
+                });
+              }
             } else {
               throw helpers.generateError(
                 `Unable to Update Invite - Server Error`,

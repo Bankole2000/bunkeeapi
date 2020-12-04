@@ -15,6 +15,9 @@ Notification.init(
     senderId: {
       type: DataTypes.STRING,
     },
+    recieverId: {
+      type: DataTypes.INTEGER,
+    },
     associatedUsers: {
       type: DataTypes.JSON,
     },
