@@ -30,6 +30,7 @@ module.exports.getAllUsers = async (req, res) => {
       'emailVerificationToken',
       'emailIsVerified',
       'currentSocketId',
+      'profileImageUrl',
     ],
     include: [
       Agent,

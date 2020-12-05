@@ -13,10 +13,22 @@ Notification.init(
       type: DataTypes.STRING,
     },
     senderId: {
-      type: DataTypes.STRING,
+      type: DataTypes.INTEGER,
     },
     recieverId: {
       type: DataTypes.INTEGER,
+    },
+    notificationText: {
+      type: DataTypes.STRING,
+    },
+    notificationAction: {
+      type: DataTypes.STRING,
+    },
+    notificationUrl: {
+      type: DataTypes.STRING,
+    },
+    hasBeenSeen: {
+      type: DataTypes.BOOLEAN,
     },
     associatedUsers: {
       type: DataTypes.JSON,

@@ -127,6 +127,8 @@ const listingRoutes = require('./api/routes/listingRoutes');
 const bookingRoutes = require('./api/routes/bookingRoutes');
 const singleUserRoutes = require('./api/routes/singleUserRoutes');
 const chatRoutes = require('./api/routes/chatRoutes');
+const notificationRoutes = require('./api/routes/notificationRoutes');
+
 const { watch } = require('fs');
 
 app.get('/', (req, res) => {
@@ -140,6 +142,7 @@ app.use('/listings', listingRoutes);
 app.use('/offers', offerRoutes);
 app.use('/rentals', rentalRoutes);
 app.use('/chat', chatRoutes);
+app.use('/notifications', notificationRoutes);
 // app.post('/listingImage', upload.single('listingImage'), (req, res, next) => {
 //   console.log(req.file);
 //   res.status(200).json({ message: 'uploaded file' });

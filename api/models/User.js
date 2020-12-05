@@ -13,6 +13,7 @@ const Comment = require('./Comment');
 const CommentReply = require('./CommentReply');
 const ChatContact = require('./ChatContact');
 const ChatMessage = require('./ChatMessage');
+const Notification = require('./Notification');
 
 class User extends Model {
   static LoginError(message, field) {
@@ -303,6 +304,16 @@ User.hasMany(ChatMessage, {
   foreignKey: 'recieverId',
 });
 
+User.hasMany(Notification, {
+  foreignKey: 'senderId',
+  as: 'sentNotifications',
+});
+
+User.hasMany(Notification, {
+  foreignKey: 'recieverId',
+  as: 'recieveredNotifications',
+});
+
 User.hasMany(GuestReviewReply, {
   foreignKey: 'guestReviewReplyUserId',
 });
@@ -353,5 +364,11 @@ ChatContact.belongsTo(User, { as: 'inviter' });
 ChatContact.belongsTo(User, { as: 'invitee' });
 ChatMessage.belongsTo(User, { as: 'sender' });
 ChatMessage.belongsTo(User, { as: 'reciever' });
+Notification.belongsTo(User, {
+  as: 'reciever',
+});
+Notification.belongsTo(User, {
+  as: 'sender',
+});
 
 module.exports = User;
