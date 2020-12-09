@@ -50,6 +50,25 @@ io.on('connection', (socket) => {
     console.log(data);
     io.to(data.socketId).emit('isTyping', data);
   });
+  socket.on('sendListingInvite', (data) => {
+    console.log(data);
+    io.to(
+      data.data.notification.reciever.currentSocketId ?? data.socketId
+    ).emit('recievedListingInvite', data);
+  });
+  socket.on('sendChatInvite', (data) => {
+    console.log(data);
+    if (data.data.invite.invitee.currentSocketId) {
+      io.to(data.data.invite.invitee.currentSocketId).emit(
+        'recievedChatInvite',
+        data
+      );
+    }
+  });
+  socket.on('inviteResponse', (data) => {
+    io.to(data.socketId).emit('inviteResponse', data);
+    console.log(data);
+  });
   socket.on('chatMessage', (data) => {
     console.log(data);
     io.to(data.chattee.currentSocketId).emit('chatMessage', data.message);

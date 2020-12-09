@@ -63,7 +63,7 @@ router.delete(
   requireUserAuth,
   listingController.deleteListingImage
 );
-router.get('/listing/:listingId', listingController.getSingleListingDetails);
+router.get('/listing/:listinguuid', listingController.getSingleListingDetails);
 router.patch('/:listingId', listingController.updateListing);
 router.delete('/:listingId', requireUserAuth, listingController.deleteListing);
 

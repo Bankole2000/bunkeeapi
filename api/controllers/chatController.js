@@ -1,6 +1,7 @@
 const { helpers, config } = require('../../config/setup');
 const ChatContact = require('../models/ChatContact');
 const ChatMessage = require('../models/ChatMessage');
+const Notification = require('../models/Notification');
 const User = require('../models/User');
 const { Op } = require('sequelize');
 
@@ -163,6 +164,7 @@ module.exports.sendChatInvite = async (req, res) => {
               .json({ message: `Blocked by you`, invite: previouslyBlocked });
           } else if (previouslyBlocked.blockedBy == chattee.id) {
             res.status(401).json({
+              success: false,
               message: `Blocked by contact`,
               invite: previouslyBlocked,
             });
@@ -187,18 +189,21 @@ module.exports.sendChatInvite = async (req, res) => {
             if (alreadyInvited.hasBeenDeclined) {
               console.log('Invite has been declined');
               res.status(200).json({
+                success: false,
                 message: `Chattee already declined Invitation`,
                 invite: alreadyInvited,
               });
             } else if (alreadyInvited.hasBeenAccepted) {
               console.log('Invite Has been accepted');
               res.status(200).json({
+                success: false,
                 message: `This User is already in your contacts`,
                 invite: alreadyInvited,
               });
             } else {
               console.log('Invite not yet responded to');
               res.status(200).json({
+                success: false,
                 message: `Already Invited but still pending`,
                 invite: alreadyInvited,
               });
@@ -221,18 +226,21 @@ module.exports.sendChatInvite = async (req, res) => {
               if (alreadyBeenInvited.hasBeenDeclined) {
                 console.log('You already declined this invite');
                 res.status(200).json({
+                  success: false,
                   message: `You already declined Invitation`,
                   invite: alreadyBeenInvited,
                 });
               } else if (alreadyBeenInvited.hasBeenAccepted) {
                 console.log('You already accepted this invite');
                 res.status(200).json({
+                  success: false,
                   message: `This User is already in your contacts`,
                   invite: alreadyBeenInvited,
                 });
               } else {
                 console.log('User yet to responded to this invite');
                 res.status(200).json({
+                  success: false,
                   message: `Already Invited but still pending`,
                   invite: alreadyBeenInvited,
                 });
@@ -243,9 +251,42 @@ module.exports.sendChatInvite = async (req, res) => {
                 inviterId: userId,
                 inviteeId: chatteeId,
               });
+              const createdInvite = await ChatContact.findByPk(invite.id, {
+                include: [
+                  { model: User, as: 'inviter' },
+                  { model: User, as: 'invitee' },
+                  { model: ChatMessage, as: 'conversation' },
+                ],
+              });
+              const newNotification = await Notification.create({
+                notificationType: 'chatInvite',
+                senderId: createdInvite.inviterId,
+                recieverId: createdInvite.inviteeId,
+                notificationText: `sent you a Chat Invite`,
+                notificationAction: `open Chat`,
+                notificationUrl: null,
+                associatedUsers: [
+                  createdInvite.inviterId,
+                  createdInvite.inviteeId,
+                ],
+              });
+              const createdNotification = await Notification.findByPk(
+                newNotification.id,
+                {
+                  include: [
+                    { model: User, as: 'sender' },
+                    { model: User, as: 'reciever' },
+                  ],
+                }
+              );
               // user.addChatContact(invite);
               // chattee.addChatContact(invite);
-              res.status(201).json({ message: `Invite Sent`, invite });
+              res.status(201).json({
+                message: `Invite Sent`,
+                success: true,
+                invite: createdInvite,
+                notification: createdNotification,
+              });
             }
           }
         }
@@ -326,13 +367,46 @@ module.exports.respondToChatInvite = async (req, res) => {
               where: { id: inviteId },
             });
             if (result[0]) {
-              const updatedInvite = await ChatContact.findByPk(inviteId);
+              const updatedInvite = await ChatContact.findByPk(inviteId, {
+                include: [
+                  { model: User, as: 'inviter' },
+                  { model: User, as: 'invitee' },
+                  { model: ChatMessage, as: 'conversation' },
+                ],
+              });
+              let notificationText = `${
+                updateData.hasBeenAccepted ? 'accepted' : 'declined'
+              } your chat invite ${
+                updatedInvite.hasBeenAccepted ? '👍✅' : '👎❌'
+              }`;
               if (updatedInvite.hasBeenAccepted) {
+                const newNotification = await Notification.create({
+                  notificationType: 'chatInvite',
+                  senderId: updatedInvite.inviteeId,
+                  recieverId: updatedInvite.inviterId,
+                  notificationText,
+                  notificationAction: `open Chat`,
+                  notificationUrl: null,
+                  associatedUsers: [
+                    updatedInvite.inviterId,
+                    updatedInvite.inviteeId,
+                  ],
+                });
+                const createdNotification = await Notification.findByPk(
+                  newNotification.id,
+                  {
+                    include: [
+                      { model: User, as: 'sender' },
+                      { model: User, as: 'reciever' },
+                    ],
+                  }
+                );
                 res.status(200).json({
                   message: `updated Invite with id - ${inviteId}`,
                   invite: updatedInvite,
                   accepted: true,
                   declined: false,
+                  notification: createdNotification,
                 });
               } else if (updatedInvite.hasBeenDeclined) {
                 res.status(200).json({
@@ -353,7 +427,13 @@ module.exports.respondToChatInvite = async (req, res) => {
               where: { id: inviteId },
             });
             if (result[0]) {
-              const updatedInvite = await ChatContact.findByPk(inviteId);
+              const updatedInvite = await ChatContact.findByPk(inviteId, {
+                include: [
+                  { model: User, as: 'inviter' },
+                  { model: User, as: 'invitee' },
+                  { model: ChatMessage, as: 'conversation' },
+                ],
+              });
               res.status(200).json({
                 message: `updated Invite with id - ${inviteId}`,
                 invite: updatedInvite,
@@ -394,9 +474,17 @@ module.exports.deleteChatInvite = async (req, res) => {
     const user = await User.findByPk(userId);
     if (user) {
       const invite = await ChatContact.findByPk(inviteId);
+
       if (invite) {
-        if (user.id == invite.inviterId) {
-          ChatContact.destroy({ where: { id: inviteId, inviterId: user.id } });
+        if (user.id == invite.inviterId || invite.inviteeId == user.id) {
+          ChatContact.destroy({
+            where: {
+              id: invite.id,
+              [Op.and]: {
+                [Op.or]: [{ inviterId: user.id }, { inviteeId: user.id }],
+              },
+            },
+          });
           res
             .status(200)
             .json({ message: `Invite Deleted - id - ${inviteId}` });

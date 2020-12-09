@@ -7,6 +7,7 @@ const GuestReview = require('../models/GuestReview');
 const Booking = require('../models/Booking');
 const Agent = require('../models/Agent');
 const Rental = require('../models/Rental');
+const Notification = require('../models/Notification');
 
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
@@ -46,6 +47,8 @@ module.exports.getAllUsers = async (req, res) => {
       { model: GuestReview, isAliased: 'guest' },
       { model: ChatContact, as: 'inviter' },
       { model: ChatContact, as: 'invitee' },
+      { model: Notification, as: 'recievedNotifications' },
+      { model: Notification, as: 'sentNotifications' },
     ],
     order: [
       [Listing, 'createdAt', 'DESC'],
@@ -211,10 +214,22 @@ module.exports.userLogin = async (req, res) => {
           role: user.role,
           isAgent: user.isAgent,
         });
+        const loggedInUser = await User.findByPk(user.id, {
+          include: [
+            {
+              model: Notification,
+              as: 'recievedNotifications',
+              include: [
+                { model: User, as: 'reciever' },
+                { model: User, as: 'sender' },
+              ],
+            },
+          ],
+        });
         res.status(200).json({
           message: `Login Successful`,
           token: userToken,
-          user,
+          user: loggedInUser,
         });
       }
     } else if (validator.isValidUsername(emailOrUsername)) {
@@ -232,11 +247,13 @@ module.exports.userLogin = async (req, res) => {
           role: user.role,
           isAgent: user.isAgent,
         });
-
+        const loggedInUser = await User.findByPk(user.id, {
+          include: [{ model: Notification, as: 'recievedNotifications' }],
+        });
         res.status(200).json({
           message: `Login Successful`,
           token: userToken,
-          user,
+          user: loggedInUser,
         });
       }
     } else {

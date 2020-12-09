@@ -12,7 +12,7 @@ const Promotion = require('../models/Promotion');
 module.exports.getAllListings = async (req, res) => {
   try {
     const listings = await Listing.findAndCountAll({
-      include: [ListingImage, User, Promotion],
+      include: [ListingImage, { model: User, as: 'owner' }, Promotion],
     });
     listings.rows.forEach((listing) => {
       console.log(listing);
@@ -25,6 +25,7 @@ module.exports.getAllListings = async (req, res) => {
     });
     res.status(200).json(listings);
   } catch (err) {
+    console.log(err);
     let errors = helpers.handleErrors(err);
     res.status(400).json(errors);
   }
@@ -102,10 +103,11 @@ module.exports.createAListing = async (req, res) => {
 };
 
 module.exports.getSingleListingDetails = async (req, res) => {
-  const id = req.params.listingId;
+  const { listinguuid } = req.params;
   try {
-    const listing = await Listing.findByPk(id, {
-      include: [ListingImage, User],
+    const listing = await Listing.findOne({
+      where: { uuid: listinguuid },
+      include: [ListingImage, { model: User, as: 'owner' }],
     });
     if (listing) {
       listing.dataValues.rules = listing.getRules();
@@ -114,10 +116,12 @@ module.exports.getSingleListingDetails = async (req, res) => {
       listing.dataValues.finalDescriptions = listing.getFinalDescriptions();
       listing.dataValues.utilities = listing.getUtilities();
       listing.dataValues.guestPreferences = listing.getGuestPreferences();
-      res.status(200).json({ message: 'Listing Details', listing });
+      res
+        .status(200)
+        .json({ message: 'Listing Details', success: true, listing });
     } else {
       throw helpers.generateError(
-        `No listing Found with id - ${id}`,
+        `No listing Found with uuid - ${listinguuid}`,
         'Listing Id'
       );
     }

@@ -27,8 +27,9 @@ Notification.init(
     notificationUrl: {
       type: DataTypes.STRING,
     },
-    hasBeenSeen: {
+    hasBeenRead: {
       type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
     associatedUsers: {
       type: DataTypes.JSON,

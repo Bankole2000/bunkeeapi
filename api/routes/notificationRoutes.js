@@ -27,4 +27,10 @@ router.delete(
   notificationController.deleteNotification
 );
 
+router.patch(
+  '/notification/:notificationId',
+  requireUserAuth,
+  notificationController.updateNotification
+);
+
 module.exports = router;

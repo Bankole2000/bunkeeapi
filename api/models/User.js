@@ -311,7 +311,7 @@ User.hasMany(Notification, {
 
 User.hasMany(Notification, {
   foreignKey: 'recieverId',
-  as: 'recieveredNotifications',
+  as: 'recievedNotifications',
 });
 
 User.hasMany(GuestReviewReply, {
@@ -334,6 +334,7 @@ User.hasOne(Agent);
 
 Listing.belongsTo(User, {
   foreignKey: 'ownerId',
+  as: 'owner',
 });
 
 Comment.belongsTo(User, {
