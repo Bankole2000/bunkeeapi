@@ -15,7 +15,7 @@ module.exports.getUserListings = async (req, res) => {
         where: {
           ownerId: user.id,
         },
-        include: [ListingImage, User],
+        include: [ListingImage, { model: User, as: 'owner' }],
       });
       res.status(200).json({
         message: `Listings made by ${username}`,
@@ -28,6 +28,7 @@ module.exports.getUserListings = async (req, res) => {
       );
     }
   } catch (err) {
+    console.log(err);
     let errors = helpers.handleErrors(err);
     res.status(404).json(errors);
   }
