@@ -17,6 +17,16 @@ router.get(
   requireUserAuth,
   notificationController.getAllUserRecievedNotifications
 );
+router.patch(
+  '/user/recieved',
+  requireUserAuth,
+  notificationController.markAllAsRead
+);
+router.delete(
+  '/user/recieved',
+  requireUserAuth,
+  notificationController.clearAllUserRecievedNotifications
+);
 router.post(
   '/users/:userId',
   requireUserAuth,

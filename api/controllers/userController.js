@@ -33,27 +33,27 @@ module.exports.getAllUsers = async (req, res) => {
       'currentSocketId',
       'profileImageUrl',
     ],
-    include: [
-      Agent,
-      {
-        model: Listing,
-        include: {
-          model: ListingImage,
-        },
-        order: [[ListingImage, 'listingOrder', 'ASC']],
-      },
-      Offer,
-      { model: HostReview, isAliased: 'host' },
-      { model: GuestReview, isAliased: 'guest' },
-      { model: ChatContact, as: 'inviter' },
-      { model: ChatContact, as: 'invitee' },
-      { model: Notification, as: 'recievedNotifications' },
-      { model: Notification, as: 'sentNotifications' },
-    ],
-    order: [
-      [Listing, 'createdAt', 'DESC'],
-      [Offer, 'createdAt', 'DESC'],
-    ],
+    // include: [
+    //   Agent,
+    //   {
+    //     model: Listing,
+    //     include: {
+    //       model: ListingImage,
+    //     },
+    //     order: [[ListingImage, 'listingOrder', 'ASC']],
+    //   },
+    //   Offer,
+    //   { model: HostReview, isAliased: 'host' },
+    //   { model: GuestReview, isAliased: 'guest' },
+    //   { model: ChatContact, as: 'inviter' },
+    //   { model: ChatContact, as: 'invitee' },
+    //   { model: Notification, as: 'recievedNotifications' },
+    //   { model: Notification, as: 'sentNotifications' },
+    // ],
+    // order: [
+    //   [Listing, 'createdAt', 'DESC'],
+    //   [Offer, 'createdAt', 'DESC'],
+    // ],
   });
   res.status(200).json({ message: 'Get all users', users });
 };

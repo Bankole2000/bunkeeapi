@@ -20,7 +20,9 @@ const io = require('socket.io')(server, {
 });
 
 io.on('connection', (socket) => {
+  io.to(socket.id).emit('connected', socket.id);
   console.log(`Socket Connected! ${socket.id}`);
+
   // socket.emit('position', position);
   // socket.on('like', (data) => {
   //   console.log(data);
@@ -30,21 +32,21 @@ io.on('connection', (socket) => {
   //   console.log(data);
   //   socket.emit('chatMessage', data);
   // });
-  socket.on('login', async (data) => {
+  socket.on('login', (data) => {
     console.log('user logged In', { user: data.user.id });
-    const updatedUser = await userMethods.updateLoggedInStatus(
-      data.user.id,
-      true,
-      socket.id
-    );
-    console.log({ updatedUser: updatedUser.dataValues });
-    io.emit('newLogin', updatedUser);
+    userMethods
+      .updateLoggedInStatus(data.user.id, true, socket.id)
+      .then((updatedUser) => {
+        socket.username = updatedUser.username;
+        socket.broadcast.emit('newLogin', updatedUser);
+      });
   });
-  socket.on('logout', async (user) => {
-    console.log(user);
-    const updatedUser = await userMethods.updateLoggedInStatus(user.id, false);
-    console.log(`${user.username} logged out`);
-    io.emit('userLogout', updatedUser);
+  socket.on('logout', (user) => {
+    userMethods.updateLoggedInStatus(user.id, false).then((updatedUser) => {
+      console.log(`${user.username} logged out`);
+
+      socket.broadcast.emit('userLogout', updatedUser);
+    });
   });
   socket.on('typing', (data) => {
     console.log(data);
@@ -52,9 +54,9 @@ io.on('connection', (socket) => {
   });
   socket.on('sendListingInvite', (data) => {
     console.log(data);
-    io.to(
-      data.data.notification.reciever.currentSocketId ?? data.socketId
-    ).emit('recievedListingInvite', data);
+    socket
+      .to(data.data.notification.reciever.currentSocketId ?? data.socketId)
+      .emit('recievedListingInvite', data);
   });
   socket.on('sendChatInvite', (data) => {
     console.log(data);

@@ -11,6 +11,66 @@ module.exports.getAllUserSentNotifications = (req, res) => {
   res.status(200).json({ message: 'Get all User Sent Notifications' });
 };
 
+module.exports.markAllAsRead = async (req, res) => {
+  const { userId } = req;
+  try {
+    if (userId) {
+      updateData = [];
+      updateObject = { name: 'hasBeenRead', value: false };
+      updateData.push(updateObject);
+      const result = await Notification.update(updateData, {
+        where: { recieverId: userId },
+      });
+      if (result[0]) {
+        res.status(200).json({
+          message: 'All Notifications Marked as read',
+          success: true,
+          result,
+        });
+      } else {
+        throw helpers.generateError(
+          'Unable to update Notifications',
+          'Server Error'
+        );
+      }
+    } else {
+      throw helpers.generateError('Not Authorized', 'userId');
+    }
+  } catch (err) {
+    console.log(err);
+    let errors = helpers.handleErrors(err);
+    res.status(400).json(errors);
+  }
+};
+
+module.exports.clearAllUserRecievedNotifications = async (req, res) => {
+  const { userId } = req;
+  try {
+    if (userId) {
+      const result = await Notification.destroy({
+        where: { recieverId: userId },
+      });
+      if (result[0]) {
+        res
+          .status(200)
+          .json({ message: 'Notifications cleared', success: true, result });
+      } else {
+        throw helpers.generateError(
+          'Unable to delete Notifications',
+          'Server Error'
+        );
+      }
+    } else {
+      throw helpers.generateError('Unauthorized', 'userId');
+    }
+  } catch (err) {
+    console.log(err);
+    let errors = helpers.handleErrors(err);
+    res.status(400).json(errors);
+  }
+  res.status(200).json({ message: 'All user recieved Notifications deleted' });
+};
+
 module.exports.getAllUserRecievedNotifications = (req, res) => {
   res.status(200).json({ message: 'Get all User Recieved Notifications' });
 };
@@ -59,8 +119,6 @@ module.exports.sendNotificationToUser = async (req, res) => {
     let errors = helpers.handleErrors(err);
     res.status(400).json(errors);
   }
-
-  res.status(200).json({ message: 'Send Notification to user' });
 };
 
 module.exports.deleteNotification = (req, res) => {
